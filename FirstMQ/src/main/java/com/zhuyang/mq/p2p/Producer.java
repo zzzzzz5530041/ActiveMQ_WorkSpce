@@ -4,9 +4,10 @@ import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
+import javax.jms.MapMessage;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.jms.TextMessage;
+import javax.jms.TemporaryQueue;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -27,8 +28,8 @@ public class Producer {
 		// message destination
 		Destination destination = null;
 		MessageProducer messageProducer = null;
-		// create ConnectionFactory
 		try {
+			// create ConnectionFactory
 			cf = new ActiveMQConnectionFactory(USERNAME, PASSWORD, BROKERURL);
 			// create activemq connection
 			connection = cf.createConnection();
@@ -37,12 +38,15 @@ public class Producer {
 			session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
 			// create a queue name= helloworld
 			destination = session.createQueue("helloworld");
+			
 			// create MessageProducer
 			messageProducer = session.createProducer(destination);
 			for (int i = 0; i < 10; i++) {
-				TextMessage msg = session.createTextMessage("hello" + i);
+				MapMessage msg = session.createMapMessage();
+				msg.setString("hello"+i, "world"+i);
 				messageProducer.send(msg);
 			}
+			
 			session.commit();
 		} catch (JMSException e) {
 			// TODO Auto-generated catch block

@@ -1,10 +1,10 @@
-package com.zhuyang.mq.pubsub;
+package com.zhuyang.mq.pubsub.persist;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
@@ -12,14 +12,7 @@ import javax.jms.Topic;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-/**
- * this is non-persist message. message can be recieve only if Subcriber is up,
- * otherwise, message cant be recieved .
- * 
- * @author Administrator
- *
- */
-public class Subcriber {
+public class Publisher {
 	// default connection username
 	private static final String USERNAME = ActiveMQConnection.DEFAULT_USER;
 	// default connection password
@@ -30,34 +23,34 @@ public class Subcriber {
 	public static void main(String[] args) {
 		ConnectionFactory cf = null;
 		Connection connection = null;
+		// session used to revieve or send
 		Session session = null;
+		// message destination
 		Topic topic = null;
-		MessageConsumer messageConsumer;
-
+		MessageProducer messageProducer = null;
+		// create ConnectionFactory
 		try {
 			cf = new ActiveMQConnectionFactory(USERNAME, PASSWORD, BROKERURL);
+			// create activemq connection
 			connection = cf.createConnection();
-			connection.start();
+			
+			// create session
 			session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
-			topic = session.createTopic("mytopic");
-			messageConsumer = session.createConsumer(topic);
-			Message msg = (Message) messageConsumer.receive();
-			while (msg != null) {
-				TextMessage txtMsg = (TextMessage) msg;
-				System.out.println("message recieved:" + txtMsg.getText());
-				session.commit();
-				msg = messageConsumer.receive();
+			// create a topic name= mytopic
+			topic = session.createTopic("mytopic_persistent");
+			// create MessageProducer
+			messageProducer = session.createProducer(topic);
+			messageProducer.setDeliveryMode(DeliveryMode.PERSISTENT); //set persistent
+			connection.start();
+			for (int i = 0; i < 10; i++) {
+				TextMessage msg = session.createTextMessage("mytopic_persistent" + i);
+				messageProducer.send(msg);
 			}
+			session.commit();
 		} catch (JMSException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
-			try {
-				session.close();
-			} catch (JMSException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
 			try {
 				connection.close();
 			} catch (JMSException e) {

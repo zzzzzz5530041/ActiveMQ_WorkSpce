@@ -43,11 +43,12 @@ public class Publisher {
 				TextMessage msg = session.createTextMessage("mytopic" + i);
 				messageProducer.send(msg);
 			}
+			
 			session.commit();
 		} catch (JMSException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} finally {
+		}finally {
 			try {
 				connection.close();
 			} catch (JMSException e) {

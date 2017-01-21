@@ -4,6 +4,7 @@ import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
+import javax.jms.MapMessage;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -33,14 +34,18 @@ public class Consumer {
 			session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
 			destination = session.createQueue("helloworld");
 			messageConsumer = session.createConsumer(destination);
-			while (true) {
-				TextMessage msg = (TextMessage) messageConsumer.receive(100000);
+			int i=0;
+			while (i<10) {
+				MapMessage msg = (MapMessage) messageConsumer.receive(100000);
 				if (msg != null) {
-					System.out.println("message recieved:" + msg.getText());
+					System.out.println("message recieved:" + msg.getString("hello"+i));
 					session.commit();// commit to make sure the message was consumed.  if not commit,every time we will get the message
+					 Destination d = msg.getJMSReplyTo();
+					 System.out.println(d);
 				} else {
 					break;
 				}
+				i++;
 			}
 		} catch (JMSException e) {
 			// TODO Auto-generated catch block
