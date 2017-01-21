@@ -30,13 +30,14 @@ public class Consumer {
 			cf = new ActiveMQConnectionFactory(USERNAME, PASSWORD, BROKERURL);
 			connection = cf.createConnection();
 			connection.start();
-			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
 			destination = session.createQueue("helloworld");
 			messageConsumer = session.createConsumer(destination);
 			while (true) {
 				TextMessage msg = (TextMessage) messageConsumer.receive(100000);
 				if (msg != null) {
 					System.out.println("message recieved:" + msg.getText());
+					session.commit();// commit to make sure the message was consumed.  if not commit,every time we will get the message
 				} else {
 					break;
 				}
@@ -44,6 +45,19 @@ public class Consumer {
 		} catch (JMSException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally{
+			try {
+				session.close();
+			} catch (JMSException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			try {
+				connection.close();
+			} catch (JMSException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 	}
